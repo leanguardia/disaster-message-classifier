@@ -14,8 +14,8 @@ def load_data(messages_filepath, categories_filepath):
 
 def clean_data(df):
     """Perform data transformations"""
-    # parse categories
-    categories = _clean_categories(df.categories) 
+    
+    categories = _clean_categories(df.categories) # parse categories
     df.drop(columns=['categories'], inplace=True)
     df = pd.concat([df, categories], axis=1)
 
@@ -24,7 +24,6 @@ def clean_data(df):
     
     return df 
 
-    
 
 def _clean_categories(categories):
     # expand categories into columns
@@ -43,8 +42,9 @@ def _clean_categories(categories):
 
 
 def save_data(df, database_filename):
+    """Stores data frame in SQLite database"""
     engine = create_engine(f'sqlite:///{database_filename}')
-    df.to_sql('messages', engine, index=False)
+    df.to_sql('messages', engine, if_exists='replace', index=False)
 
 
 def main():
