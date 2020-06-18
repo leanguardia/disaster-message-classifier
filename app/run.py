@@ -43,13 +43,27 @@ def index():
     # Distribution of message categories
     category_dist = df.categories.explode().value_counts()
     category_dist_viz = {
-        'data': [
-            Bar(x = category_dist.keys(), y = category_dist.values)
-        ],
+        'data': [{
+            'type': 'bar',
+            'x': category_dist.values,
+            'y': category_dist.keys(),
+            'orientation': 'h',
+            'textposition': 'auto',
+            'transforms': [{
+                'type': 'sort',
+                'target': 'y',
+                'order': 'descending'
+            }],
+        }],
         'layout': {
+            'height': 800,
             'title': 'Distribution of Message Categories',
-            'yaxis': { 'title': "Count" },
-            'xaxis': { 'title': "Category" }
+            'xaxis': { 
+                'title': "Number of messages",
+                'dtick': 1000,
+                'range': [0, 20100]
+            },
+            'yaxis': { 'automargin': True },
         }
     }
     
