@@ -44,6 +44,12 @@ def _clean_categories(categories):
     return categories_list, categories_cols
 
 
+def augment_features(df):
+    # Calculate the number of words in the message 
+    df['words_count'] = df.message.str.split(' ').apply(lambda words: len(words))
+    return df
+
+
 def save_data(df, database_filename):
     """Stores data frame in SQLite database"""
     engine = create_engine(f'sqlite:///{database_filename}')
@@ -61,8 +67,11 @@ def main():
 
         print('Cleaning data...')
         df = clean_data(df)
+
+        print('Augmenting data...')
+        df = augment_features(df)
         
-        print('Saving data...\n    DATABASE: {}'.format(database_filepath))
+        print('Saving data...\n    DATABASE: {} {}'.format(database_filepath, df.shape))
         save_data(df, database_filepath)
         
         print('Cleaned data saved to database!')
