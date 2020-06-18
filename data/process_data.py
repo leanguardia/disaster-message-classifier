@@ -15,20 +15,23 @@ def load_data(messages_filepath, categories_filepath):
 def clean_data(df):
     """Perform data transformations"""
     
-    categories = _clean_categories(df.categories) # parse categories
-    df.drop(columns=['categories'], inplace=True)
-    df = pd.concat([df, categories], axis=1)
+    categ_list, categ_cols = _clean_categories(df.categories) # parse categories
+    df.categories = categ_list.astype(str)
+    df = pd.concat([df, categ_cols], axis=1)
 
     # remove duplicates
     df.drop_duplicates(subset=['id'], inplace=True)
     
-    return df 
+    return df
 
 
 def _clean_categories(categories):
+    # tidy up list of categories
+    categories_list = categories.str.split(';') \
+        .apply(lambda cats: [cat[:-2] for cat in cats if cat[-1]=='1'])
+
     # expand categories into columns
-    categories_cols = categories.str.split(";", expand=True)
-    
+    categories_cols = categories.str.split(';', expand=True)
     # extract the category desciptions from the first row
     categories_names = categories_cols.loc[0].apply(lambda category: category[:-2])
     categories_cols.columns = categories_names
@@ -38,7 +41,7 @@ def _clean_categories(categories):
         categories_cols[column] = categories_cols[column].str[-1]
         categories_cols[column] = categories_cols[column].astype(int)
 
-    return categories_cols
+    return categories_list, categories_cols
 
 
 def save_data(df, database_filename):
@@ -63,6 +66,8 @@ def main():
         save_data(df, database_filepath)
         
         print('Cleaned data saved to database!')
+        
+        return df
     
     else:
         print('Please provide the filepaths of the messages and categories '\
@@ -74,4 +79,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    df = main()
