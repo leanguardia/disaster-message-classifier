@@ -1,6 +1,7 @@
 import json
 import plotly
 import pandas as pd
+from ast import literal_eval
 
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
@@ -28,6 +29,7 @@ def tokenize(text):
 # load data
 engine = create_engine('sqlite:///data/DisasterResponse.db')
 df = pd.read_sql_table('messages', engine)
+df.categories = df.categories.apply(literal_eval)
 
 # load model
 model = joblib.load("models/message-cls.pkl")
@@ -37,15 +39,26 @@ model = joblib.load("models/message-cls.pkl")
 @app.route('/')
 @app.route('/index')
 def index():
+
+    # Distribution of message categories
+    category_dist = df.categories.explode().value_counts()
+    category_dist_viz = {
+        'data': [
+            Bar(x = category_dist.keys(), y = category_dist.values)
+        ],
+        'layout': {
+            'title': 'Distribution of Message Categories',
+            'yaxis': { 'title': "Count" },
+            'xaxis': { 'title': "Category" }
+        }
+    }
     
-    # extract data needed for visuals
+    # Distribution of message genres
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
-    
-    # create visuals
-    genre_dist = {
+    genre_dist_viz = {
         'data': [
-            Bar(x=genre_names, y=genre_counts)
+            Bar(x = genre_names, y = genre_counts)
         ],
         'layout': {
             'title': 'Distribution of Message Genres',
@@ -53,7 +66,7 @@ def index():
             'xaxis': { 'title': "Genre" }
         }
     }
-    graphs = [genre_dist]
+    graphs = [category_dist_viz, genre_dist_viz]
     
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
