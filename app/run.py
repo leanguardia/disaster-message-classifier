@@ -63,12 +63,14 @@ def index():
     }
 
     # Distribution of message categories
-    category_dist = df.categories.explode().value_counts()
+    category_dist = df.categories.explode().value_counts(dropna=False)
+    labels = ['None' if str(cat) == 'nan' else cat for cat in category_dist.keys()]
+    print(labels)
     category_dist_viz = {
         'data': [{
             'type': 'bar',
             'x': category_dist.values,
-            'y': category_dist.keys(),
+            'y': labels,
             'orientation': 'h',
             'textposition': 'auto',
             'transforms': [{
@@ -76,9 +78,12 @@ def index():
                 'target': 'y',
                 'order': 'descending'
             }],
+            'marker': {
+                'color': ['#D3D3D3' if label=='None' else '#1f77b4' for label in labels],
+            }
         }],
         'layout': {
-            'height': 800,
+            'height': 820,
             'title': 'Distribution of Message Categories',
             'xaxis': { 
                 'title': "Number of messages",
