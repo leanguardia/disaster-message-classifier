@@ -13,7 +13,8 @@ nltk.download(['punkt', 'wordnet'])
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.neighbors   import KNeighborsClassifier
 from sklearn.ensemble    import RandomForestClassifier
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.preprocessing import FunctionTransformer
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import classification_report
 
@@ -25,7 +26,6 @@ def load_data(database_filepath):
 
     engine = create_engine(f'sqlite:///{database_filepath}')
     df = pd.read_sql_table("messages", engine)
-    # features = ['message'], 'original', 'genre']
     category_names  = ['related', 'request', 'offer', 'aid_related', 'medical_help',
                         'medical_products', 'search_and_rescue', 'security', 'military',
                         'child_alone', 'water', 'food', 'shelter',  'clothing', 'money',
@@ -34,7 +34,7 @@ def load_data(database_filepath):
                         'tools', 'hospitals', 'shops', 'aid_centers', 'other_infrastructure',
                         'weather_related', 'floods', 'storm', 'fire', 'earthquake', 'cold',
                         'other_weather', 'direct_report']
-    X = df.message.values
+    X = df.message
     y = df[category_names].values
     return X, y, category_names
 
@@ -53,12 +53,22 @@ def tokenize(text):
 
     return clean_tokens
 
+def count_words(X):
+    return X.apply(lambda msg: len(msg.strip().split(' '))).values.reshape(-1, 1)
+
 
 def build_model():
+    word_counter = FunctionTransformer(count_words)
     return Pipeline([
-        ('tokenize', CountVectorizer(tokenizer=tokenize)),
-        ('tdf',      TfidfTransformer()),
-        ('cls',      MultiOutputClassifier(RandomForestClassifier()))
+        ('features', FeatureUnion([
+            ('nlp', Pipeline([
+                ('tokenize', CountVectorizer(tokenizer=tokenize)),
+                ('tdf',      TfidfTransformer()),
+            ])),
+
+            ('word_counter', word_counter),
+        ])),
+        ('cls', MultiOutputClassifier(RandomForestClassifier()))
     ])
 
 
