@@ -78,10 +78,11 @@ def evaluate_model(model, X_test, y_test, category_names):
     """Calculates Precision, Recall and F1_score for all targets individually"""
 
     y_pred = model.predict(X_test)
+    eval_results = []
     for index, y_test_col in enumerate(y_test.transpose()):
-        print(category_names[index])
-        # print(y_test_col, y_pred.T[index])
-        print(classification_report(y_test_col, y_pred.T[index]))
+        report = classification_report(y_test_col, y_pred.T[index], output_dict=True)
+        eval_results.append((category_names[index], report['accuracy']))
+    return eval_results
 
 
 def save_model(model, model_filepath):
@@ -106,7 +107,8 @@ def main():
         model.fit(X_train, Y_train)
         
         print('Evaluating model...')
-        evaluate_model(model, X_test, Y_test, category_names)
+        results = evaluate_model(model, X_test, Y_test, category_names)
+        print(results)
 
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
         save_model(model, model_filepath)
