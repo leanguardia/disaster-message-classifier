@@ -53,12 +53,9 @@ def tokenize(text):
 
     return clean_tokens
 
-def count_words(X):
-    return X.apply(lambda msg: len(msg.strip().split(' '))).values.reshape(-1, 1)
-
-
 def build_model():
-    word_counter = FunctionTransformer(count_words)
+    """Defines the transformation pipeline for text messages"""
+
     return Pipeline([
         ('features', FeatureUnion([
             ('nlp', Pipeline([
@@ -66,10 +63,15 @@ def build_model():
                 ('tdf',      TfidfTransformer()),
             ])),
 
-            ('word_counter', word_counter),
+            ('word_counter', FunctionTransformer(_count_words)),
         ])),
         ('cls', MultiOutputClassifier(RandomForestClassifier()))
     ])
+
+def _count_words(X):
+    """Transforms messages Series the number of words it contains"""
+
+    return X.apply(lambda msg: len(msg.strip().split(' '))).values.reshape(-1, 1)
 
 
 def evaluate_model(model, X_test, y_test, category_names):
