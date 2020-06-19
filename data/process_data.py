@@ -16,13 +16,15 @@ def transform_data(df):
     """Perform data cleaning and feature augmentation"""
     
     categ_list, categ_cols = _clean_categories(df.categories) # parse categories
-    df.categories = categ_list.astype(str)
+    # Store number of categories
+    df['category_count'] = categ_list.apply(lambda cats: len(cats))
     df = pd.concat([df, categ_cols], axis=1)
+    df.categories = categ_list.astype(str) # Store the list as string 
 
     # remove duplicates
     df.drop_duplicates(subset=['id'], inplace=True)
 
-    # Calculate the number of words in the message 
+    # Store the number of words in the message 
     df['words_count'] = df.message.str.strip().str.split(' ').apply(lambda words: len(words))
     # Remove messages with less than 3 words and upper outliers
     words_q1 = df.words_count.quantile(.25)
