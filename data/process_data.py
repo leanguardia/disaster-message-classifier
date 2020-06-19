@@ -12,8 +12,8 @@ def load_data(messages_filepath, categories_filepath):
     return messages.merge(categories, on='id')
 
 
-def clean_data(df):
-    """Perform data transformations"""
+def transform_data(df):
+    """Perform data cleaning and feature augmentation"""
     
     categ_list, categ_cols = _clean_categories(df.categories) # parse categories
     df.categories = categ_list.astype(str)
@@ -21,7 +21,17 @@ def clean_data(df):
 
     # remove duplicates
     df.drop_duplicates(subset=['id'], inplace=True)
-    
+
+    # Calculate the number of words in the message 
+    df['words_count'] = df.message.str.strip().str.split(' ').apply(lambda words: len(words))
+    # Remove messages with less than 3 words and upper outliers
+    words_q1 = df.words_count.quantile(.25)
+    words_q3 = df.words_count.quantile(.75)
+    words_iqr = words_q3 - words_q1
+    min_words = 3
+    max_words = words_q3 + 1.5 * words_iqr
+    df = df[(df.words_count >= min_words ) & (df.words_count <= max_words)]
+
     return df
 
 
@@ -44,12 +54,6 @@ def _clean_categories(categories):
     return categories_list, categories_cols
 
 
-def augment_features(df):
-    # Calculate the number of words in the message 
-    df['words_count'] = df.message.str.split(' ').apply(lambda words: len(words))
-    return df
-
-
 def save_data(df, database_filename):
     """Stores data frame in SQLite database"""
     engine = create_engine(f'sqlite:///{database_filename}')
@@ -66,10 +70,7 @@ def main():
         df = load_data(messages_filepath, categories_filepath)
 
         print('Cleaning data...')
-        df = clean_data(df)
-
-        print('Augmenting data...')
-        df = augment_features(df)
+        df = transform_data(df)
         
         print('Saving data...\n    DATABASE: {} {}'.format(database_filepath, df.shape))
         save_data(df, database_filepath)
