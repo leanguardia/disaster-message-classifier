@@ -1,6 +1,7 @@
 import json
 import plotly
 import pandas as pd
+import numpy as np
 from ast import literal_eval
 
 from nltk.stem import WordNetLemmatizer
@@ -39,6 +40,27 @@ model = joblib.load("models/message-cls.pkl")
 @app.route('/')
 @app.route('/index')
 def index():
+
+    # Number of words vs number of categories
+    heatmap = df.groupby(['words_count', 'category_count']).size().unstack(fill_value=0)
+    heatmap = np.flipud(np.rot90(heatmap.values, 1))
+    words_vs_categories_viz = {
+        'data': [{
+            'type': 'heatmap',
+            'z': heatmap,
+            'colorscale': [[0, '#fef5e7'], [1, '#1f77b4']],
+        }],
+        'layout': {
+            'height': 600,
+            'title': 'Number of words by number of categories in messages',
+            'xaxis': { 
+                'title': "Number of words", 'dtick': 5,
+            },
+            'yaxis': { 
+                'title': 'Number of categories', 'dtick': 2,
+            },
+        }
+    }
 
     # Distribution of message categories
     category_dist = df.categories.explode().value_counts()
@@ -80,7 +102,7 @@ def index():
             'xaxis': { 'title': "Genre" }
         }
     }
-    graphs = [category_dist_viz, genre_dist_viz]
+    graphs = [words_vs_categories_viz, category_dist_viz, genre_dist_viz]
     
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
