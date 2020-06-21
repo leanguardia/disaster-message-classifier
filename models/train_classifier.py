@@ -60,7 +60,7 @@ def build_model():
         ('features', FeatureUnion([
             ('nlp', Pipeline([
                 ('tokenize', CountVectorizer(tokenizer=tokenize)),
-                ('tdf',      TfidfTransformer()),
+                ('tfidf',      TfidfTransformer()),
             ])),
 
             ('word_counter', FunctionTransformer(_count_words)),
@@ -84,12 +84,15 @@ def _count_words(X):
 
 def evaluate_model(model, X_test, y_test, category_names):
     """Calculates Precision, Recall and F1_score for all targets individually"""
+    eval_results = {}
+    required_metrics = ['precision', 'recall', 'f1-score']
 
     y_pred = model.predict(X_test)
-    eval_results = []
     for index, y_test_col in enumerate(y_test.transpose()):
+        # generate report for each class
         report = classification_report(y_test_col, y_pred.T[index], output_dict=True)
-        eval_results.append((category_names[index], report['accuracy']))
+        label_results = { key: report['macro avg'][key] for key in required_metrics }
+        eval_results[category_names[index]] = label_results
     return eval_results
 
 
