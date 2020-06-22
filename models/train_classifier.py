@@ -78,7 +78,7 @@ def build_model():
 
 def _count_words(X):
     """Transforms messages Series the number of words it contains"""
-
+    X = pd.Series(X)
     return X.apply(lambda msg: len(msg.strip().split(' '))).values.reshape(-1, 1)
 
 
