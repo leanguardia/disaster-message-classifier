@@ -4,8 +4,8 @@ from sqlalchemy import create_engine
 
 
 def load_data(messages_filepath, categories_filepath):
-    """Loads messages and categories and merges in one DataFrame"""
-    
+    """Loads messages and categories from csv files and merges them into one DataFrame."""
+
     messages   = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     
@@ -13,13 +13,19 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def transform_data(df):
-    """Perform data cleaning and feature augmentation"""
-    
+    """Perform data cleaning and feature augmentation.
+
+        - Category list parsing
+        - Category splitting and extension into columns
+        - Remove duplicates
+        - Count words in message and remove outliers
+    """
+
     categ_list, categ_cols = _clean_categories(df.categories) # parse categories
     # Store number of categories
     df['category_count'] = categ_list.apply(lambda cats: len(cats))
     df = pd.concat([df, categ_cols], axis=1)
-    df.categories = categ_list.astype(str) # Store the list as string 
+    df.categories = categ_list.astype(str) # Required for database storage 
 
     # remove duplicates
     df.drop_duplicates(subset=['id'], inplace=True)
@@ -57,7 +63,7 @@ def _clean_categories(categories):
 
 
 def save_data(df, database_filename):
-    """Stores data frame in SQLite database"""
+    """Stores data frame in SQLite database."""
     engine = create_engine(f'sqlite:///{database_filename}')
     df.to_sql('messages', engine, if_exists='replace', index=False)
 

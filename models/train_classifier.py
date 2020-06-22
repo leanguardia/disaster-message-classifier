@@ -22,7 +22,18 @@ import pickle
 
 
 def load_data(database_filepath):
-    """Loads messages from database and creates a DataFrame"""
+    """Loads messages from database and returns split data for model training.
+        
+        Parameters:
+        - database_filepath (str): relative path of the SQLite database file,
+            e.g. 'DisasterResponse.db' 
+
+        Returns:
+        - X (pandas.Series): Series containing messages in the dataset.
+        - y (numpy.ndarray): Matrix containing target binary values where each column
+            corresponds to a message label.
+        - category_names (list): List of 36 message labels.
+    """
 
     engine = create_engine(f'sqlite:///{database_filepath}')
     df = pd.read_sql_table("messages", engine)
@@ -40,7 +51,7 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
-    """Performs NLP transformations"""
+    """Performs NLP transformations."""
 
     text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower()) # normalization
     tokens = word_tokenize(text)
@@ -54,7 +65,7 @@ def tokenize(text):
     return clean_tokens
 
 def build_model():
-    """Defines the transformation pipeline for text messages"""
+    """Defines the transformation pipeline for text messages."""
 
     pipeline = Pipeline([
         ('features', FeatureUnion([
@@ -77,13 +88,13 @@ def build_model():
     return GridSearchCV(pipeline, param_grid=parameters)
 
 def _count_words(X):
-    """Transforms messages Series the number of words it contains"""
+    """Transforms messages Series to the numbers of words they contain."""
     X = pd.Series(X)
     return X.apply(lambda msg: len(msg.strip().split(' '))).values.reshape(-1, 1)
 
 
 def evaluate_model(model, X_test, y_test, category_names):
-    """Calculates Precision, Recall and F1_score for all targets individually"""
+    """Calculates Precision, Recall and F1_score for all targets individually."""
     eval_results = {}
     required_metrics = ['precision', 'recall', 'f1-score']
 
@@ -97,7 +108,7 @@ def evaluate_model(model, X_test, y_test, category_names):
 
 
 def save_model(model, model_filepath):
-    """Stores the model in a pickle file"""
+    """Stores the model in a pickle file."""
 
     pkl_filename = model_filepath
     with open(pkl_filename, 'wb') as file:
