@@ -36,9 +36,10 @@ Then go to http://0.0.0.0:3001/ in your browser.
 #### Pages
 
 - **Home:** allows to enter text messages for classification. It also renders three plots to
-  visualize some characteristics of the dataset used for the classifier's training.
+  visualize some characteristics of the dataset used for the classifier's training. For
+  instance, the distribution of messages categories is shown in the following picture.
 
-  ![Message Category Distribution]('app/message_distribution.png')
+  ![Message Category Distribution](app/message_distribution.png)
   
 - **Query:** after a message has been submited in the home page, this view shows the
   predicted classes the text belongs to.
